@@ -16,12 +16,59 @@ datasource db {
 
 model LineItem {
   id          String   @id @default(uuid())
-  createdAt   DateTime
+  createdAt   DateTime @default(now())
   amount      Int
   description String
   quantity    Int
-  userId String
-    user User @relation(fields: [userId], references:[id]) 
+  userId      String
+  invoiceId   String @unique
+  user User @relation(fields: [userId], references:[id]) 
+  invoice Invoice @relation(fields: [invoiceId], references: [id] )
+}
+
+model Invoice {
+    id String @id @default(uuid())
+    createdAt DateTime @default(now())
+    discount Int? @default(0)
+    dueDate DateTime @default(now())
+    invoiceNumber String
+    invoiceStatus InvoiceStatus @default(draft)
+    issueDate DateTime @default(now())
+    notes String?
+    subject String?
+    terms String?
+    userId String
+    user User @relation(fields: [userId], references: [id])
+
+    LineItem LineItem?
+}
+
+model Client {
+    id String @id @default(uuid())
+    clientStatus ClientStatus @default(draft)
+    city String?
+    email String?
+    name String
+    state String?
+    street String?
+    zip String?
+    createdAt DateTime @default(now())
+    userId String
+    user User @relation(fields: [userId], references: [id])
+}
+
+model Settings {
+    id String @id @default(uuid())
+    createdAt DateTime @default(now())
+    myName String
+    email String
+    street String
+    city String
+    state String
+    zip String
+    userId String @unique
+    user User @relation(fields: [userId], references: [id])
+
 }
 
 model User {
@@ -35,10 +82,13 @@ model User {
   sessions      Session[]
   accounts      Account[]
 
+  LineItem LineItem[]
+  Invoice Invoice[]
+  Client Client[]
+  Settings Settings? 
 
   @@unique([email])
   @@map("user")
-  LineItem LineItem[]
 }
 
 model Session {
@@ -84,4 +134,17 @@ model Verification {
   updatedAt  DateTime?
 
   @@map("verification")
+}
+
+
+enum ClientStatus {
+  active 
+  archive
+  draft
+}
+
+enum InvoiceStatus {
+  draft
+  sent
+  paid
 }
